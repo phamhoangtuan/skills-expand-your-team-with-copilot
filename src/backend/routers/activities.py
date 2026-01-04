@@ -10,6 +10,7 @@ from ..database import activities_collection, teachers_collection
 
 # Constants for difficulty filtering
 NO_DIFFICULTY_FILTER = "none"  # Used to filter activities without a difficulty level
+VALID_DIFFICULTY_LEVELS = {"Beginner", "Intermediate", "Advanced", NO_DIFFICULTY_FILTER}
 
 router = APIRouter(
     prefix="/activities",
@@ -45,6 +46,10 @@ def get_activities(
         query["schedule_details.end_time"] = {"$lte": end_time}
     
     if difficulty:
+        # Validate difficulty parameter to prevent injection
+        if difficulty not in VALID_DIFFICULTY_LEVELS:
+            raise HTTPException(status_code=400, detail=f"Invalid difficulty level. Must be one of: {', '.join(VALID_DIFFICULTY_LEVELS)}")
+        
         if difficulty == NO_DIFFICULTY_FILTER:
             # Filter for activities without a difficulty field
             query["difficulty"] = {"$exists": False}

@@ -205,10 +205,10 @@ section h3 {
   letter-spacing: 0.3px;
 }
 
-/* Difficulty Badge */
+/* Difficulty Badge - positioned on left, mirrors activity tag on right */
 .difficulty-badge {
   position: absolute;
-  top: 8px;
+  top: 8px; /* Same as activity tag for consistent vertical alignment */
   left: 8px;
   font-size: 0.65rem;
   font-weight: bold;
