@@ -8,6 +8,9 @@ from typing import Dict, Any, Optional, List
 
 from ..database import activities_collection, teachers_collection
 
+# Constants for difficulty filtering
+NO_DIFFICULTY_FILTER = "none"  # Used to filter activities without a difficulty level
+
 router = APIRouter(
     prefix="/activities",
     tags=["activities"]
@@ -42,8 +45,8 @@ def get_activities(
         query["schedule_details.end_time"] = {"$lte": end_time}
     
     if difficulty:
-        if difficulty == "none":
-            # "none" explicitly means activities without a difficulty field
+        if difficulty == NO_DIFFICULTY_FILTER:
+            # Filter for activities without a difficulty field
             query["difficulty"] = {"$exists": False}
         else:
             # Filter by specific difficulty level
