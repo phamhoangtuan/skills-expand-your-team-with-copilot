@@ -569,6 +569,28 @@ document.addEventListener("DOMContentLoaded", () => {
         `
         }
       </div>
+      <div class="share-buttons">
+        <button class="share-btn share-twitter" data-activity="${name}" title="Share on Twitter">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+          </svg>
+        </button>
+        <button class="share-btn share-facebook" data-activity="${name}" title="Share on Facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
+          </svg>
+        </button>
+        <button class="share-btn share-email" data-activity="${name}" title="Share via Email">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/>
+          </svg>
+        </button>
+        <button class="share-btn share-copy" data-activity="${name}" title="Copy Link">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z"/>
+          </svg>
+        </button>
+      </div>
     `;
 
     // Add click handlers for delete buttons
@@ -586,6 +608,15 @@ document.addEventListener("DOMContentLoaded", () => {
         });
       }
     }
+
+    // Add click handlers for share buttons
+    const shareButtons = activityCard.querySelectorAll(".share-btn");
+    shareButtons.forEach((button) => {
+      button.addEventListener("click", (e) => {
+        e.preventDefault();
+        handleShare(button.dataset.activity, button.classList);
+      });
+    });
 
     activitiesList.appendChild(activityCard);
   }
@@ -854,6 +885,62 @@ document.addEventListener("DOMContentLoaded", () => {
       console.error("Error signing up:", error);
     }
   });
+
+  // Handle share button clicks
+  function handleShare(activityName, classList) {
+    const activity = allActivities[activityName];
+    if (!activity || !classList) return;
+
+    // Create shareable content
+    const shareTitle = `${activityName} - Mergington High School`;
+    const shareText = `Check out this activity: ${activityName} - ${activity.description}`;
+    const shareUrl = `${window.location.origin}${window.location.pathname}?activity=${encodeURIComponent(activityName)}`;
+
+    if (classList.contains("share-twitter")) {
+      // Twitter/X share - Note: Still using twitter.com as the official API endpoint
+      const twitterUrl = `https://twitter.com/intent/tweet?text=${encodeURIComponent(shareText)}&url=${encodeURIComponent(shareUrl)}`;
+      window.open(twitterUrl, "_blank", "width=550,height=420");
+    } else if (classList.contains("share-facebook")) {
+      // Facebook share
+      const facebookUrl = `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareUrl)}`;
+      window.open(facebookUrl, "_blank", "width=550,height=420");
+    } else if (classList.contains("share-email")) {
+      // Email share
+      const emailSubject = encodeURIComponent(shareTitle);
+      const emailBody = encodeURIComponent(`${shareText}\n\nLearn more: ${shareUrl}`);
+      window.location.href = `mailto:?subject=${emailSubject}&body=${emailBody}`;
+    } else if (classList.contains("share-copy")) {
+      // Copy link to clipboard
+      // Note: Clipboard API requires secure context (HTTPS or localhost)
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(shareUrl).then(() => {
+          showMessage("Link copied to clipboard!", "success");
+        }).catch(() => {
+          useFallbackCopy(shareUrl);
+        });
+      } else {
+        // Fallback for older browsers or non-secure contexts
+        useFallbackCopy(shareUrl);
+      }
+    }
+  }
+
+  // Fallback copy method for browsers without clipboard API
+  function useFallbackCopy(text) {
+    const textArea = document.createElement("textarea");
+    textArea.value = text;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    try {
+      document.execCommand("copy");
+      showMessage("Link copied to clipboard!", "success");
+    } catch (err) {
+      showMessage("Failed to copy link. Please copy manually: " + text, "error");
+    }
+    document.body.removeChild(textArea);
+  }
 
   // Expose filter functions to window for future UI control
   window.activityFilters = {
