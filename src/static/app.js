@@ -520,6 +520,7 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
 
     // Create difficulty badge (only if difficulty is set and valid)
+    // Note: These values must match VALID_DIFFICULTY_LEVELS in backend/routers/activities.py
     const validDifficulties = ['Beginner', 'Intermediate', 'Advanced'];
     const difficultyBadgeHtml = details.difficulty && validDifficulties.includes(details.difficulty) ? `
       <span class="difficulty-badge difficulty-${details.difficulty.toLowerCase()}">
