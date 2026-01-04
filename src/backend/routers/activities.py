@@ -8,6 +8,10 @@ from typing import Dict, Any, Optional, List
 
 from ..database import activities_collection, teachers_collection
 
+# Constants for difficulty filtering
+NO_DIFFICULTY_FILTER = "none"  # Used to filter activities without a difficulty level
+VALID_DIFFICULTY_LEVELS = {"Beginner", "Intermediate", "Advanced", NO_DIFFICULTY_FILTER}
+
 router = APIRouter(
     prefix="/activities",
     tags=["activities"]
@@ -18,14 +22,16 @@ router = APIRouter(
 def get_activities(
     day: Optional[str] = None,
     start_time: Optional[str] = None,
-    end_time: Optional[str] = None
+    end_time: Optional[str] = None,
+    difficulty: Optional[str] = None
 ) -> Dict[str, Any]:
     """
-    Get all activities with their details, with optional filtering by day and time
+    Get all activities with their details, with optional filtering by day, time, and difficulty
     
     - day: Filter activities occurring on this day (e.g., 'Monday', 'Tuesday')
     - start_time: Filter activities starting at or after this time (24-hour format, e.g., '14:30')
     - end_time: Filter activities ending at or before this time (24-hour format, e.g., '17:00')
+    - difficulty: Filter activities by difficulty level ('Beginner', 'Intermediate', 'Advanced', 'none' for activities without difficulty)
     """
     # Build the query based on provided filters
     query = {}
@@ -38,6 +44,18 @@ def get_activities(
     
     if end_time:
         query["schedule_details.end_time"] = {"$lte": end_time}
+    
+    if difficulty:
+        # Validate difficulty parameter to prevent injection
+        if difficulty not in VALID_DIFFICULTY_LEVELS:
+            raise HTTPException(status_code=400, detail=f"Invalid difficulty level. Must be one of: {', '.join(VALID_DIFFICULTY_LEVELS)}")
+        
+        if difficulty == NO_DIFFICULTY_FILTER:
+            # Filter for activities without a difficulty field
+            query["difficulty"] = {"$exists": False}
+        else:
+            # Filter by specific difficulty level
+            query["difficulty"] = difficulty
     
     # Query the database
     activities = {}
